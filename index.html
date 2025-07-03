@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flashcards App</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1em;
+      background-color: #f9f9f9;
+    }
+
+    .card {
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 16px;
+      width: 90%;
+      max-width: 400px;
+      padding: 2em;
+      margin: 1em 0;
+      text-align: center;
+      font-size: 1.4em;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      transition: transform 0.4s;
+      cursor: pointer;
+    }
+
+    .card.flipped .front {
+      display: none;
+    }
+
+    .card.flipped .back {
+      display: block;
+    }
+
+    .front, .back {
+      display: block;
+    }
+
+    .back {
+      display: none;
+      color: #444;
+    }
+
+    #loading {
+      font-size: 1.2em;
+      margin-top: 2em;
+    }
+  </style>
+</head>
+<body>
+  <h1>My Flashcards</h1>
+  <div id="flashcards"></div>
+  <div id="loading">Loading...</div>
+
+  <script>
+    const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTcuAiGMffvxu81PWjltWAMN2KzSnZHgz1mbTCHaqZJE3UBVL_obhmMBHS1EolEWshy4D85RhGiyM_o/pub?output=csv";
+
+    async function fetchFlashcards() {
+      try {
+        const response = await fetch(sheetUrl);
+        const csvText = await response.text();
+        const flashcards = parseCSV(csvText);
+        displayFlashcards(flashcards);
+      } catch (err) {
+        document.getElementById("loading").innerText = "Failed to load flashcards.";
+        console.error(err);
+      }
+    }
+
+    function parseCSV(csv) {
+      const lines = csv.trim().split("\n");
+      const data = lines.slice(1).map(line => {
+        const [front, back] = line.split(",");
+        return { front, back };
+      });
+      return data;
+    }
+
+    function displayFlashcards(cards) {
+      const container = document.getElementById("flashcards");
+      const loading = document.getElementById("loading");
+      container.innerHTML = "";
+      loading.style.display = "none";
+
+      cards.forEach(card => {
+        const div = document.createElement("div");
+        div.className = "card";
+        div.innerHTML = `
+          <div class="front">${card.front}</div>
+          <div class="back">${card.back}</div>
+        `;
+        div.addEventListener("click", () => {
+          div.classList.toggle("flipped");
+        });
+        container.appendChild(div);
+      });
+    }
+
+    fetchFlashcards();
+  </script>
+</body>
+</html>
